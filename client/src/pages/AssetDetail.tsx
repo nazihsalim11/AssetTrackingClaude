@@ -1,11 +1,12 @@
 import { FormEvent, useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { api, resolveFileUrl } from '../api/client';
 import { uploadToSignedUrl } from '../api/storage';
 import { useAuth } from '../context/AuthContext';
 import { Asset, AssetDocument, AssetMovement, AppUser, Department } from '../types';
 
 const MANAGER_ROLES = ['super_admin', 'it_admin', 'facility_admin'];
+const COMPANY_NAME = import.meta.env.VITE_COMPANY_NAME || 'Enterprise Asset Tracking';
 
 interface AllocationRow {
   id: number;
@@ -17,8 +18,10 @@ interface AllocationRow {
 
 export default function AssetDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const canManage = !!user && MANAGER_ROLES.includes(user.role);
+  const isSuperAdmin = user?.role === 'super_admin';
 
   const [asset, setAsset] = useState<Asset | null>(null);
   const [allocations, setAllocations] = useState<AllocationRow[]>([]);
@@ -94,6 +97,17 @@ export default function AssetDetail() {
     loadAll();
   }
 
+  async function handleDelete() {
+    if (!asset) return;
+    const confirmed = window.confirm(
+      `Permanently delete asset ${asset.asset_code} (${asset.name})?\n\n` +
+        'This also removes its allocation, movement, AMC and document records and cannot be undone.'
+    );
+    if (!confirmed) return;
+    await api.delete(`/assets/${id}`);
+    navigate('/assets');
+  }
+
   async function handleUploadDoc(e: FormEvent) {
     e.preventDefault();
     if (!docFile) return;
@@ -118,9 +132,14 @@ export default function AssetDetail() {
     <div>
       <div className="topbar">
         <h2 style={{ margin: 0 }}>{asset.name}</h2>
-        {canManage && asset.status !== 'disposed' && (
-          <button className="btn btn-ghost" onClick={handleArchive}>Archive</button>
-        )}
+        <div style={{ display: 'flex', gap: 8 }}>
+          {canManage && asset.status !== 'disposed' && (
+            <button className="btn btn-ghost" onClick={handleArchive}>Archive</button>
+          )}
+          {isSuperAdmin && (
+            <button className="btn btn-ghost btn-danger" onClick={handleDelete}>Delete</button>
+          )}
+        </div>
       </div>
       {message && <p className="ok-text">&#10003; {message}</p>}
 
@@ -157,7 +176,12 @@ export default function AssetDetail() {
           ) : (
             <p className="mono">— no QR code generated —</p>
           )}
-          <p className="mono" style={{ letterSpacing: '0.1em' }}>{asset.asset_code}</p>
+          <div className="qr-label-meta">
+            <div className="qr-company">{COMPANY_NAME}</div>
+            <div className="mono" style={{ letterSpacing: '0.1em' }}>{asset.asset_code}</div>
+            <div className="mono qr-label-sub">{asset.type.toUpperCase()}</div>
+            {asset.serial_number && <div className="mono qr-label-sub">SN: {asset.serial_number}</div>}
+          </div>
           {asset.qr_code_url && (
             <a className="btn" href={resolveFileUrl(asset.qr_code_url)} download target="_blank" rel="noreferrer">
               Print / Download Label

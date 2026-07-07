@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { pool } from '../db/pool';
 import { requireAuth, requireRole } from '../middleware/auth';
 import { writeAuditLog } from '../utils/audit';
+import { notifyRoles } from '../utils/notifications';
 
 const router = Router();
 router.use(requireAuth);
@@ -103,6 +104,24 @@ router.post(
       ]);
       await client.query('COMMIT');
       await writeAuditLog(req.user!.id, 'return', 'allocation', Number(req.params.id));
+
+      const info = await pool.query(
+        `SELECT a.asset_code, a.name AS asset_name, u.name AS employee_name
+         FROM allocations al
+         JOIN assets a ON a.id = al.asset_id
+         JOIN users u ON u.id = al.employee_id
+         WHERE al.id = $1`,
+        [req.params.id]
+      );
+      if (info.rows[0]) {
+        const r = info.rows[0];
+        await notifyRoles(
+          ['super_admin', 'it_admin', 'facility_admin'],
+          'asset_return',
+          `${r.asset_code} - ${r.asset_name} was returned by ${r.employee_name}`
+        );
+      }
+
       res.json(allocation.rows[0]);
     } catch (err) {
       await client.query('ROLLBACK');

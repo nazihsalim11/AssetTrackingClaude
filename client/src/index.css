@@ -407,6 +407,33 @@ tbody tr:last-child td {
   font-size: 11px;
 }
 
+.btn-danger {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+.btn-danger:hover {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #12161c;
+}
+
+.qr-label-meta {
+  margin: 8px 0 12px;
+  line-height: 1.5;
+}
+
+.qr-company {
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+}
+
+.qr-label-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
 /* ---------- badges ---------- */
 
 .badge {

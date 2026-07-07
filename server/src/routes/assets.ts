@@ -114,7 +114,13 @@ router.post(
       const id = insertResult.rows[0].id;
       const assetCode = `AST-${String(id).padStart(5, '0')}`;
 
-      const qrPayload = JSON.stringify({ assetCode, type: d.type, serialNumber: d.serialNumber ?? '' });
+      const company = process.env.COMPANY_NAME || 'Enterprise Asset Tracking';
+      const qrPayload = JSON.stringify({
+        assetCode,
+        type: d.type,
+        serialNumber: d.serialNumber ?? '',
+        company,
+      });
       const qrFileName = `${assetCode}.png`;
       const qrBuffer = await QRCode.toBuffer(qrPayload, { width: 300 });
       const qrCodeUrl = await uploadToBucket('qrcodes', qrFileName, qrBuffer, 'image/png');
@@ -218,10 +224,30 @@ router.post(
 );
 
 router.delete('/:id', requireRole('super_admin'), async (req, res) => {
-  const result = await pool.query(`DELETE FROM assets WHERE id = $1 RETURNING id`, [req.params.id]);
-  if (!result.rows[0]) return res.status(404).json({ error: 'Asset not found' });
-  await writeAuditLog(req.user!.id, 'delete', 'asset', Number(req.params.id));
-  res.status(204).send();
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const existing = await client.query(`SELECT asset_code FROM assets WHERE id = $1`, [req.params.id]);
+    if (!existing.rows[0]) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Asset not found' });
+    }
+    // documents reference assets via loose related_type/related_id columns (no FK),
+    // so they won't cascade — remove them explicitly to avoid orphaned rows.
+    // allocations, asset_movements and amc_contracts cascade via their FKs.
+    await client.query(`DELETE FROM documents WHERE related_type = 'asset' AND related_id = $1`, [req.params.id]);
+    await client.query(`DELETE FROM assets WHERE id = $1`, [req.params.id]);
+    await client.query('COMMIT');
+    await writeAuditLog(req.user!.id, 'delete', 'asset', Number(req.params.id), {
+      assetCode: existing.rows[0].asset_code,
+    });
+    res.status(204).send();
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
 });
 
 export default router;

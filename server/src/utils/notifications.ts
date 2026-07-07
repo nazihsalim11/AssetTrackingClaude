@@ -1,6 +1,6 @@
 import { pool } from '../db/pool';
 
-async function notifyRoles(roles: string[], type: string, message: string): Promise<number> {
+export async function notifyRoles(roles: string[], type: string, message: string): Promise<number> {
   const users = await pool.query(`SELECT id FROM users WHERE role = ANY($1) AND is_active = true`, [roles]);
   let inserted = 0;
   for (const user of users.rows) {
