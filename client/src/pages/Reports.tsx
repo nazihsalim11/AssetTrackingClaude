@@ -38,7 +38,9 @@ export default function Reports() {
     });
   }, [active]);
 
-  function download() {
+  const activeLabel = REPORTS.find((r) => r.key === active)?.label ?? active;
+
+  function downloadCsv() {
     const csv = toCsv(rows);
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -49,6 +51,31 @@ export default function Reports() {
     URL.revokeObjectURL(url);
   }
 
+  // xlsx / jsPDF are heavy, so load them on demand to keep the main bundle small.
+  async function downloadExcel() {
+    const XLSX = await import('xlsx');
+    const worksheet = XLSX.utils.json_to_sheet(rows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, activeLabel.slice(0, 31));
+    XLSX.writeFile(workbook, `${active}-report.xlsx`);
+  }
+
+  async function downloadPdf() {
+    const { jsPDF } = await import('jspdf');
+    const autoTable = (await import('jspdf-autotable')).default;
+    const doc = new jsPDF({ orientation: 'landscape' });
+    doc.setFontSize(14);
+    doc.text(activeLabel, 14, 16);
+    autoTable(doc, {
+      startY: 22,
+      head: [headers.map((h) => h.replace(/_/g, ' '))],
+      body: rows.map((row) => headers.map((h) => (row[h] === null || row[h] === undefined ? '' : String(row[h])))),
+      styles: { fontSize: 7 },
+      headStyles: { fillColor: [40, 48, 60] },
+    });
+    doc.save(`${active}-report.pdf`);
+  }
+
   const headers = rows.length > 0 ? Object.keys(rows[0]) : [];
 
   return (
@@ -56,10 +83,15 @@ export default function Reports() {
       <div className="topbar">
         <h2 style={{ margin: 0 }}>Reports</h2>
         <div style={{ display: 'flex', gap: 8 }}>
-          <button className="btn btn-ghost" onClick={download} disabled={rows.length === 0}>
-            Export CSV / Excel
+          <button className="btn btn-ghost" onClick={downloadCsv} disabled={rows.length === 0}>
+            Export CSV
           </button>
-          <button className="btn btn-ghost" onClick={() => window.print()}>Export PDF</button>
+          <button className="btn btn-ghost" onClick={downloadExcel} disabled={rows.length === 0}>
+            Export Excel
+          </button>
+          <button className="btn btn-ghost" onClick={downloadPdf} disabled={rows.length === 0}>
+            Export PDF
+          </button>
         </div>
       </div>
 

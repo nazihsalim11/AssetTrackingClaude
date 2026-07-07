@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { api, resolveFileUrl } from '../api/client';
 import { uploadToSignedUrl } from '../api/storage';
+import Barcode from '../components/Barcode';
 import { useAuth } from '../context/AuthContext';
 import { Asset, AssetDocument, AssetMovement, AppUser, Department } from '../types';
 
@@ -181,6 +182,9 @@ export default function AssetDetail() {
             <div className="mono" style={{ letterSpacing: '0.1em' }}>{asset.asset_code}</div>
             <div className="mono qr-label-sub">{asset.type.toUpperCase()}</div>
             {asset.serial_number && <div className="mono qr-label-sub">SN: {asset.serial_number}</div>}
+          </div>
+          <div className="barcode-wrap">
+            <Barcode value={asset.asset_code} />
           </div>
           {asset.qr_code_url && (
             <a className="btn" href={resolveFileUrl(asset.qr_code_url)} download target="_blank" rel="noreferrer">

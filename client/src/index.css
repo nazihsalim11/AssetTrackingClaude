@@ -434,6 +434,36 @@ tbody tr:last-child td {
   color: var(--text-muted);
 }
 
+.barcode-wrap {
+  display: inline-block;
+  padding: 6px 8px;
+  margin-bottom: 12px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+.global-search input {
+  width: 240px;
+  max-width: 34vw;
+}
+
+.search-results {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.search-results li {
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+
+.search-results li:last-child {
+  border-bottom: none;
+}
+
 /* ---------- badges ---------- */
 
 .badge {

@@ -15,6 +15,7 @@ import PurchaseOrders from './pages/PurchaseOrders';
 import Reports from './pages/Reports';
 import AuditLogs from './pages/AuditLogs';
 import ScanQR from './pages/ScanQR';
+import GlobalSearch from './pages/GlobalSearch';
 
 export default function App() {
   return (
@@ -33,6 +34,7 @@ export default function App() {
         <Route path="assets/new" element={<AssetCreate />} />
         <Route path="assets/:id" element={<AssetDetail />} />
         <Route path="scan" element={<ScanQR />} />
+        <Route path="search" element={<GlobalSearch />} />
         <Route path="allocations" element={<AllocationList />} />
         <Route path="amc" element={<AmcList />} />
         <Route path="invoices" element={<InvoiceList />} />

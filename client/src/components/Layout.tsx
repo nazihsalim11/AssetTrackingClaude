@@ -1,4 +1,5 @@
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { FormEvent, useState } from 'react';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import NotificationBell from './NotificationBell';
 
@@ -25,7 +26,14 @@ function crumbFor(pathname: string): string {
 export default function Layout() {
   const { user, logout } = useAuth();
   const { pathname } = useLocation();
+  const navigate = useNavigate();
+  const [query, setQuery] = useState('');
   const role = user?.role;
+
+  function handleSearch(e: FormEvent) {
+    e.preventDefault();
+    if (query.trim()) navigate(`/search?q=${encodeURIComponent(query.trim())}`);
+  }
 
   const canManage = role === 'super_admin' || role === 'it_admin' || role === 'facility_admin';
   const canFinance = role === 'super_admin' || role === 'finance';
@@ -66,6 +74,15 @@ export default function Layout() {
             asset-track <b>/ {crumbFor(pathname)}</b>
           </div>
           <div className="topbar-right">
+            <form onSubmit={handleSearch} className="global-search">
+              <input
+                className="input"
+                placeholder="Search assets, vendors, invoices…"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                aria-label="Global search"
+              />
+            </form>
             <NotificationBell />
             <span className="user-chip">
               {user?.name} <span className="role">[{user?.role}]</span>

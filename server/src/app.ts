@@ -19,6 +19,7 @@ import purchaseOrderRoutes from './routes/purchaseOrders';
 import notificationRoutes from './routes/notifications';
 import reportRoutes from './routes/reports';
 import auditLogRoutes from './routes/auditLogs';
+import searchRoutes from './routes/search';
 
 dotenv.config();
 
@@ -45,6 +46,7 @@ app.use('/api/purchase-orders', purchaseOrderRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/audit-logs', auditLogRoutes);
+app.use('/api/search', searchRoutes);
 
 if (process.env.NODE_ENV === 'production' && !process.env.VERCEL) {
   const clientDist = path.join(__dirname, '..', '..', 'client', 'dist');
