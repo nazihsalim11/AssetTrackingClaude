@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { api } from '../api/client';
+import { api, resolveFileUrl } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { Asset, AssetDocument, AssetMovement, AppUser, Department } from '../types';
 
@@ -145,7 +145,7 @@ export default function AssetDetail() {
           <h3 style={{ textAlign: 'left' }}>QR Label</h3>
           {asset.qr_code_url ? (
             <img
-              src={asset.qr_code_url}
+              src={resolveFileUrl(asset.qr_code_url)}
               alt="QR Code"
               width={190}
               height={190}
@@ -156,7 +156,7 @@ export default function AssetDetail() {
           )}
           <p className="mono" style={{ letterSpacing: '0.1em' }}>{asset.asset_code}</p>
           {asset.qr_code_url && (
-            <a className="btn" href={asset.qr_code_url} download target="_blank" rel="noreferrer">
+            <a className="btn" href={resolveFileUrl(asset.qr_code_url)} download target="_blank" rel="noreferrer">
               Print / Download Label
             </a>
           )}
@@ -264,7 +264,7 @@ export default function AssetDetail() {
           <ul>
             {documents.map((d) => (
               <li key={d.id}>
-                <a href={d.file_url} target="_blank" rel="noreferrer">{d.doc_type}</a>
+                <a href={resolveFileUrl(d.file_url)} target="_blank" rel="noreferrer">{d.doc_type}</a>
                 {' '}({new Date(d.uploaded_at).toLocaleDateString()})
               </li>
             ))}

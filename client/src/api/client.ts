@@ -1,6 +1,17 @@
 import axios from 'axios';
 
-export const api = axios.create({ baseURL: '/api' });
+const apiBaseUrl = import.meta.env.VITE_API_URL || '/api';
+export const api = axios.create({ baseURL: apiBaseUrl });
+
+// Uploaded files (QR codes, documents) come back as paths relative to the
+// server (e.g. /uploads/qrcodes/x.png), not the API prefix, so they need the
+// server's origin rather than the API base URL when client and server are
+// deployed to different domains (client on Vercel, server on Railway).
+const serverOrigin = apiBaseUrl.replace(/\/api\/?$/, '');
+export function resolveFileUrl(url: string): string {
+  if (!url || /^https?:\/\//.test(url)) return url;
+  return `${serverOrigin}${url}`;
+}
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
