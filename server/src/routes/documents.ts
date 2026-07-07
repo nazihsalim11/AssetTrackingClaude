@@ -1,9 +1,7 @@
 import { Router } from 'express';
-import path from 'path';
 import { pool } from '../db/pool';
 import { requireAuth, requireRole } from '../middleware/auth';
 import { upload } from '../middleware/upload';
-import { uploadToBucket } from '../utils/storage';
 
 const router = Router();
 router.use(requireAuth);
@@ -46,8 +44,7 @@ router.post(
       return res.status(400).json({ error: 'relatedId and docType are required' });
     }
 
-    const uniqueName = `${Date.now()}-${Math.round(Math.random() * 1e9)}${path.extname(req.file.originalname)}`;
-    const fileUrl = await uploadToBucket('documents', uniqueName, req.file.buffer, req.file.mimetype);
+    const fileUrl = `/uploads/documents/${req.file.filename}`;
     const result = await pool.query(
       `INSERT INTO documents (related_type, related_id, doc_type, file_url, uploaded_by)
        VALUES ($1, $2, $3, $4, $5) RETURNING *`,

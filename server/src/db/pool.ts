@@ -14,10 +14,6 @@ const sslEnabled =
 
 const config: PoolConfig = {
   connectionString,
-  // Keep small: serverless invocations each hold their own pool, and the
-  // Supabase pooler has a limited number of client slots to share across them.
-  max: 5,
-  idleTimeoutMillis: 10_000,
   ...(sslEnabled ? { ssl: { rejectUnauthorized: false } } : {}),
 };
 
