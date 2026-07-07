@@ -3,9 +3,12 @@
   "private": true,
   "version": "0.1.0",
   "scripts": {
-    "build": "npm --prefix client run build && npm --prefix server run build",
+    "build": "npm --prefix client install && npm --prefix client run build && npm --prefix server install && npm --prefix server run build",
     "start": "npm --prefix server run start",
     "dev:client": "npm --prefix client run dev",
     "dev:server": "npm --prefix server run dev"
+  },
+  "dependencies": {
+    "serverless-http": "^3.2.0"
   }
 }
