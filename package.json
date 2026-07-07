@@ -7,8 +7,5 @@
     "start": "npm --prefix server run start",
     "dev:client": "npm --prefix client run dev",
     "dev:server": "npm --prefix server run dev"
-  },
-  "dependencies": {
-    "serverless-http": "^3.2.0"
   }
 }
