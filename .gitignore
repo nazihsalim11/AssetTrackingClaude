@@ -1,0 +1,5 @@
+node_modules/
+dist/
+.env
+server/uploads/qrcodes/*.png
+server/uploads/documents/*
