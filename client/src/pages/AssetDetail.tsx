@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { api, resolveFileUrl } from '../api/client';
+import { uploadToSignedUrl } from '../api/storage';
 import { useAuth } from '../context/AuthContext';
 import { Asset, AssetDocument, AssetMovement, AppUser, Department } from '../types';
 
@@ -96,12 +97,14 @@ export default function AssetDetail() {
   async function handleUploadDoc(e: FormEvent) {
     e.preventDefault();
     if (!docFile) return;
-    const form = new FormData();
-    form.append('file', docFile);
-    form.append('relatedType', 'asset');
-    form.append('relatedId', String(id));
-    form.append('docType', docType);
-    await api.post('/documents', form, { headers: { 'Content-Type': 'multipart/form-data' } });
+    const { data } = await api.post('/documents/upload-url', { fileName: docFile.name });
+    await uploadToSignedUrl('documents', data.path, data.token, docFile);
+    await api.post('/documents', {
+      relatedType: 'asset',
+      relatedId: Number(id),
+      docType,
+      fileUrl: data.publicUrl,
+    });
     setDocFile(null);
     setMessage('Document uploaded.');
     loadAll();
