@@ -1,17 +1,13 @@
 import { Router } from 'express';
-import fs from 'fs';
-import path from 'path';
 import QRCode from 'qrcode';
 import { z } from 'zod';
 import { pool } from '../db/pool';
 import { requireAuth, requireRole } from '../middleware/auth';
 import { writeAuditLog } from '../utils/audit';
+import { uploadToBucket } from '../utils/storage';
 
 const router = Router();
 router.use(requireAuth);
-
-const QR_DIR = path.join(__dirname, '..', '..', 'uploads', 'qrcodes');
-fs.mkdirSync(QR_DIR, { recursive: true });
 
 const assetSchema = z.object({
   name: z.string().min(1),
@@ -120,8 +116,8 @@ router.post(
 
       const qrPayload = JSON.stringify({ assetCode, type: d.type, serialNumber: d.serialNumber ?? '' });
       const qrFileName = `${assetCode}.png`;
-      await QRCode.toFile(path.join(QR_DIR, qrFileName), qrPayload, { width: 300 });
-      const qrCodeUrl = `/uploads/qrcodes/${qrFileName}`;
+      const qrBuffer = await QRCode.toBuffer(qrPayload, { width: 300 });
+      const qrCodeUrl = await uploadToBucket('qrcodes', qrFileName, qrBuffer, 'image/png');
 
       const updated = await client.query(
         `UPDATE assets SET asset_code = $1, qr_code_url = $2 WHERE id = $3 RETURNING *`,
